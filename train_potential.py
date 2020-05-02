@@ -26,9 +26,6 @@ class PotentialTrainer:
     def __init__(self, data_dir, f):
         self.data_dir = data_dir
         self.f = MODELS.get(f)
-        self.load_data()
-
-    def load_data(self):
         data = io.loadmat(self.data_dir)
         for data_name in ["X", "y"]:
             print("\nloaded %s data!" % data_name)
@@ -44,7 +41,7 @@ class PotentialTrainer:
         plt.xlabel('y')
         plt.show()
 
-    def cross_validation(self, alpha_range, max_iter, plot_image=False):
+    def cross_validation(self, alpha_range, max_iter=1E6, plot_image=False):
         data = self.training_data.copy()
         np.random.shuffle(data)
         training_x = data[:, 1:]
@@ -73,13 +70,29 @@ class PotentialTrainer:
                     self.plot_y_yhat(validation_y, predicted_validation)
                 errors_validation.append(error_validation)
                 errors_train.append(error_train)
-            print("Mean error train: {} eV/atom\n".format(np.mean(errors_train)))
-            print("Mean error validaiton: {} eV/atom\n".format(np.mean(errors_validation)))
+            print("Mean error train: {} eV/atom".format(np.mean(errors_train)))
+            print("Mean error validaiton: {} eV/atom".format(np.mean(errors_validation)))
             alpha_errors.append(np.mean(errors_validation))
+        alpha_errors = np.array(alpha_errors)
+        max_e = alpha_errors.max()
+        min_e = alpha_errors.min()
+        diff = max_e - min_e
+        print(alpha_errors)
+        self.plot_cross(alpha_range, alpha_errors, min_e - diff, max_e + diff)
         return alpha_errors
 
+    @staticmethod
+    def plot_cross(param, error, y_low, y_up):
+        x = np.arange(len(error))
+        plt.plot(x, error, linewidth=2, color='red', marker='.', markersize=12)
+        plt.xticks(x, param)
+        plt.ylim(y_low, y_up)
+        plt.ylabel('Mean validation error (eV/atom)')
+        plt.xlabel('Hyperparameter')
+        plt.show()
+
     def make_potential(self, output_dir):
-        model = skl.linear_model.Ridge(alpha=0.01, max_iter=1E6, fit_intercept=False)
+        model = skl.linear_model.Ridge(alpha=10, max_iter=1E6, fit_intercept=False)
         model.fit(self.training_x, self.training_y)
         potential = model.coef_[0]
         with open(os.path.join(output_dir, "re_potential"), 'w') as f:
@@ -88,5 +101,5 @@ class PotentialTrainer:
             f.close()
 
 
-pt = PotentialTrainer("/Users/th/Downloads/datafiles/re.mat", "RIDGE")
-pt.cross_validation([0, 0.01, 0.001, 0.0001, 0.00001], 1E5)
+#pt = PotentialTrainer("/Users/th/Downloads/datafiles/re.mat", "RIDGE")
+#pt.cross_validation([0, 0.01, 0.001, 0.0001, 0.00001])
