@@ -59,7 +59,8 @@ class PotentialTrainer:
                 train_x, train_y = training_x[train_id], training_y[train_id]
                 validation_x,  validation_y = training_x[validation_id],  training_y[validation_id]
                 num_array_train, num_array_validation = num_array[train_id], num_array[validation_id]
-                model = self.f(alpha=alpha, max_iter=max_iter, fit_intercept=False)
+                model = self.f(alpha=alpha, max_iter=max_iter, tol=1e-4,
+                               solver='auto', fit_intercept=False)
                 model.fit(train_x, train_y)
                 predicted_validation = model.predict(validation_x)
                 predicted_train = model.predict(train_x)
@@ -91,8 +92,8 @@ class PotentialTrainer:
         plt.xlabel('Hyperparameter')
         plt.show()
 
-    def make_potential(self, output_dir):
-        model = skl.linear_model.Ridge(alpha=10, max_iter=1E6, fit_intercept=False)
+    def make_potential(self, output_dir, alpha=1.0):
+        model = skl.linear_model.Ridge(alpha=alpha, max_iter=1E6, tol=1e-4, fit_intercept=False)
         model.fit(self.training_x, self.training_y)
         potential = model.coef_[0]
         with open(os.path.join(output_dir, "re_potential"), 'w') as f:
