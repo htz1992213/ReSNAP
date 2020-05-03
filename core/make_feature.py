@@ -3,17 +3,17 @@
 # Distributed under the terms of the MIT License.
 
 """
-This module implements a core class PotentialTrainer for training/making
-potential of Re using a training dataset containing number of atoms,
-structural bispectrum terms and energy.
+This module implements a core class FeatureMaker for generating
+lammps data files and input files from xsf files, running lammps
+and parsing the lammps outputs to training data file.
 
 """
 
+import numpy as np
 from ase.io.xsf import read_xsf
 from ase.io.lammpsdata import write_lammps_data
 from tqdm import tqdm
 from lammps import lammps
-import numpy as np
 from pymatgen.io.lammps.inputs import write_lammps_inputs
 from scipy.io import savemat
 import os
