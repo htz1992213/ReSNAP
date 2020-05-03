@@ -33,7 +33,7 @@ TEMPLATE_STRUCTURE = '''log              ${filename}.log
 
 units			metal
 boundary 		p p p
-atom_style 		atomic 
+atom_style 		atomic
 
 read_data 	      ${filename}
 #pair_style           snap
@@ -56,7 +56,7 @@ TEMPLATE_ATOM = '''log              ${filename}.log
 
 units			metal
 boundary 		p p p
-atom_style 		atomic 
+atom_style 		atomic
 
 read_data 	      ${filename}
 #pair_style           snap
@@ -65,7 +65,7 @@ pair_coeff           * * Zr_3.eam.fs Zr
 
 
 compute          b all sna/atom ${rcutfac} ${rfac0} ${twojmax} ${R_1} 1.0
-dump             1 all custom 1 ${filename}.dump c_b[*] 
+dump             1 all custom 1 ${filename}.dump c_b[*]
 
 timestep            0.001
 
@@ -78,7 +78,8 @@ DATA_DIR = '/Users/th/Downloads/datafiles/'
 
 class FeatureMaker:
 
-    def __init__(self, xsf_dir, data_dir, sna_setting, mode="structure", screen=None):
+    def __init__(self, xsf_dir, data_dir, sna_setting, mode="structure",
+                 screen=None):
         """
         Base constructor.
 
@@ -101,8 +102,10 @@ class FeatureMaker:
             self.mode = mode
             self.batch_run(template=TEMPLATE_STRUCTURE)
             self.training_n = self.read_n()
-            self.training_samples = self.read_logs(self.training_n, mode="structure")
-            self.training_energy = self.read_energy(self.training_n, mode="structure")
+            self.training_samples = self.read_logs(self.training_n,
+                                                   mode="structure")
+            self.training_energy = self.read_energy(self.training_n,
+                                                    mode="structure")
             print("Made structure-wise features with:")
             print(self.training_samples.shape, "training samples")
             print(self.training_energy.shape, "labels")
@@ -110,8 +113,10 @@ class FeatureMaker:
             self.mode = mode
             self.batch_run(template=TEMPLATE_ATOM)
             self.training_n = self.read_n()
-            self.training_samples = self.read_logs(self.training_n, mode="atom")
-            self.training_energy = self.read_energy(self.training_n, mode="atom")
+            self.training_samples = self.read_logs(self.training_n,
+                                                   mode="atom")
+            self.training_energy = self.read_energy(self.training_n,
+                                                    mode="atom")
             print("Made atom-wise features with:")
             print(self.training_samples.shape, "training samples")
             print(self.training_energy.shape, "labels")
@@ -138,7 +143,8 @@ class FeatureMaker:
             with open(os.path.join(self.xsf_dir, filename), 'r') as f:
                 try:
                     vasprun = read_xsf(f)
-                    write_lammps_data(self.data_dir + filename[:-4] + ".data", vasprun)
+                    write_lammps_data(self.data_dir + filename[:-4] + ".data",
+                                      vasprun)
                 except UnicodeDecodeError:
                     print(filename)
 
@@ -156,7 +162,8 @@ class FeatureMaker:
                 Default to None.
 
         """
-        write_lammps_inputs('.', template, settings=settings, script_filename=inputname)
+        write_lammps_inputs('.', template, settings=settings,
+                            script_filename=inputname)
         if not screen:
             lmp = lammps(cmdargs=["-screen", "none"])
         else:
@@ -180,7 +187,8 @@ class FeatureMaker:
             inputname = "vasprun" + str((i + 1)) + ".input"
             settings = {'filename': dataname}
             settings.update(self.sna_setting)
-            self.run_lammps(inputname, template, settings=settings, screen=self.screen)
+            self.run_lammps(inputname, template, settings=settings,
+                            screen=self.screen)
 
     @staticmethod
     def read_log(log_dir, filename, n_i, mode="structure"):

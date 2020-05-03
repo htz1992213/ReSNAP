@@ -55,11 +55,13 @@ class PotentialTrainer:
         self.norm = norm
         if self.norm:
             features = self.training_x[:, 1:]
-            features, norms = normalize(features, norm=self.norm, axis=0, copy=True, return_norm=True)
+            features, norms = normalize(features, norm=self.norm,
+                                        axis=0, copy=True, return_norm=True)
             self.norms = norms
             self.training_x[:, 1:] = features
         self.training_y = data.get('y')
-        self.training_data = np.concatenate((self.training_y, self.training_x), axis=1)
+        self.training_data = \
+            np.concatenate((self.training_y, self.training_x), axis=1)
 
     @staticmethod
     def plot_y_yhat(y, y_hat):
@@ -83,7 +85,8 @@ class PotentialTrainer:
         plt.xlabel('y', size=15)
         plt.show()
 
-    def cross_validation(self, alpha_range, max_iter=1e6, tol=1e-4, plot_image=False, seed=2020):
+    def cross_validation(self, alpha_range, max_iter=1e6, tol=1e-4,
+                         plot_image=False, seed=2020):
         """
          Cross validation test over a range of alpha.
 
@@ -111,21 +114,30 @@ class PotentialTrainer:
                 validation_id = all_id[i::5]
                 train_id = [i for i in all_id if i not in validation_id]
                 train_x, train_y = training_x[train_id], training_y[train_id]
-                validation_x,  validation_y = training_x[validation_id],  training_y[validation_id]
-                num_array_train, num_array_validation = num_array[train_id], num_array[validation_id]
-                model = self.f(alpha=alpha, max_iter=max_iter, tol=tol, fit_intercept=False)
+                validation_x,  validation_y = \
+                    training_x[validation_id],  training_y[validation_id]
+                num_array_train, num_array_val = \
+                    num_array[train_id], num_array[validation_id]
+                model = self.f(alpha=alpha, max_iter=max_iter, tol=tol,
+                               fit_intercept=False)
                 model.fit(train_x, train_y)
                 predicted_validation = model.predict(validation_x)
                 predicted_train = model.predict(train_x)
-                error_validation = np.average(np.absolute(validation_y - predicted_validation) / num_array_validation)
-                error_train = np.average(np.absolute(train_y - predicted_train) / num_array_train)
+                diff_val = np.absolute(validation_y - predicted_validation)
+                error_val = np.average(diff_val / num_array_val)
+                diff_train = np.absolute(train_y - predicted_train)
+                error_train = np.average(diff_train / num_array_train)
                 if i == 0 and plot_image:
-                    self.plot_y_yhat(train_y/num_array_train, predicted_train/num_array_train)
-                    self.plot_y_yhat(validation_y/num_array_validation, predicted_validation/num_array_validation)
-                errors_validation.append(error_validation)
+                    self.plot_y_yhat(train_y / num_array_train,
+                                     predicted_train / num_array_train)
+                    self.plot_y_yhat(validation_y / num_array_val,
+                                     predicted_validation / num_array_val)
+                errors_validation.append(error_val)
                 errors_train.append(error_train)
-            print("Mean error train: {} eV/atom".format(np.mean(errors_train)))
-            print("Mean error validaiton: {} eV/atom".format(np.mean(errors_validation)))
+            mean_train_e = np.mean(errors_train)
+            mean_val_e = np.mean(errors_validation)
+            print("Mean error train: {} eV/atom".format(mean_train_e))
+            print("Mean error validaiton: {} eV/atom".format(mean_val_e))
             alpha_errors.append(np.mean(errors_validation))
         alpha_errors = np.array(alpha_errors)
         max_e = max(alpha_errors)
@@ -166,7 +178,8 @@ class PotentialTrainer:
              tol (int): The tolerance for the optimization.
 
          """
-        model = self.f(alpha=alpha, max_iter=max_iter, tol=tol, fit_intercept=False)
+        model = self.f(alpha=alpha, max_iter=max_iter, tol=tol,
+                       fit_intercept=False)
         model.fit(self.training_x, self.training_y)
         potential = model.coef_[0]
         print("Fitted potential: ", potential)
