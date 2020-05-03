@@ -1,5 +1,5 @@
 # coding: utf-8
-# Copyright (c) htz1992213.
+# Copyright (c) Tingzheng Hou and Lu Jiang.
 # Distributed under the terms of the MIT License.
 
 """
