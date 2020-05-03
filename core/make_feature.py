@@ -1,3 +1,14 @@
+# coding: utf-8
+# Copyright (c) Tingzheng Hou and Lu Jiang.
+# Distributed under the terms of the MIT License.
+
+"""
+This module implements a core class PotentialTrainer for training/making
+potential of Re using a training dataset containing number of atoms,
+structural bispectrum terms and energy.
+
+"""
+
 from ase.io.xsf import read_xsf
 from ase.io.lammpsdata import write_lammps_data
 from tqdm import tqdm
@@ -10,6 +21,13 @@ import re
 import shutil
 import sys
 import warnings
+
+__author__ = "Tingzheng Hou and Lu Jiang"
+__copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"
+__version__ = "1.0"
+__maintainer__ = "Lu Jiang"
+__email__ = "lu_jiang@berkeley.edu"
+__date__ = "May 3, 2020"
 
 TEMPLATE_STRUCTURE = '''log              ${filename}.log
 
@@ -54,6 +72,7 @@ timestep            0.001
 run               0'''
 
 XSF_DIR = "/Users/th/Downloads/xsffiles/"
+
 DATA_DIR = '/Users/th/Downloads/datafiles/'
 
 

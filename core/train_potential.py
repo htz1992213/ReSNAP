@@ -18,10 +18,10 @@ import os
 import scipy as sp
 
 __author__ = "Tingzheng Hou and Lu Jiang"
-__copyright__ = "Copyright 2020, htz1992213"
+__copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"
 __version__ = "1.0"
-__maintainer__ = "Tingzheng Hou"
-__email__ = "tingzheng_hou@berkeley.edu"
+__maintainer__ = "Lu Jiang"
+__email__ = "lu_jiang@berkeley.edu"
 __date__ = "May 3, 2020"
 
 OUTPUT_DIR = "/Users/th/Downloads/datafiles"
