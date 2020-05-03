@@ -4,8 +4,8 @@
 
 """
 This module implements a core class FeatureMaker for generating
-lammps data files and input files from xsf files, running lammps
-and parsing the lammps outputs to training data file.
+lammps data files and input files from xsf files, running lammps,
+parsing the lammps outputs, and generating training data file.
 
 """
 
