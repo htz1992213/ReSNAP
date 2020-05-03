@@ -1,3 +1,14 @@
+# coding: utf-8
+# Copyright (c) htz1992213.
+# Distributed under the terms of the MIT License.
+
+"""
+This module implements a core class PotentialTrainer for training/making
+potential of Re using a training dataset containing number of atoms,
+structural bispectrum terms and energy.
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 import sklearn.linear_model
@@ -6,23 +17,34 @@ from scipy import io
 import os
 import scipy as sp
 
-np.random.seed(2020)
+__author__ = "Tingzheng Hou and Lu Jiang"
+__copyright__ = "Copyright 2020, htz1992213"
+__version__ = "1.0"
+__maintainer__ = "Tingzheng Hou"
+__email__ = "tingzheng_hou@berkeley.edu"
+__date__ = "May 3, 2020"
 
 OUTPUT_DIR = "/Users/th/Downloads/datafiles"
-MODELS = {
-    "SVD": sp.linalg.lstsq,
-    "LASSO":
-        sklearn.linear_model.Lasso,
-    "RIDGE":
-        sklearn.linear_model.Ridge,
-    "ELASTIC":
-        sklearn.linear_model.ElasticNet
-}
+
+MODELS = {"SVD": sp.linalg.lstsq,
+          "LASSO": sklearn.linear_model.Lasso,
+          "RIDGE": sklearn.linear_model.Ridge,
+          "ELASTIC": sklearn.linear_model.ElasticNet}
 
 
 class PotentialTrainer:
 
     def __init__(self, data_dir, f, norm=None):
+        """
+        Base constructor.
+
+        Args:
+            data_dir (str): directory to the training data files.
+            f (func): training model function.
+            norm (str): The norm to use to normalize features. If
+                None, apply no normalization.
+
+        """
         self.data_dir = data_dir
         self.f = MODELS.get(f)
         data = io.loadmat(self.data_dir)
@@ -40,14 +62,41 @@ class PotentialTrainer:
         self.training_data = np.concatenate((self.training_y, self.training_x), axis=1)
 
     @staticmethod
-    def plot_y_yhat(y, yhat):
-        plt.scatter(y, yhat)
-        plt.ylabel('y_hat')
-        plt.xlabel('y')
+    def plot_y_yhat(y, y_hat):
+        """
+        y vs y_hat plotter.
+
+        Args:
+            y (list or numpy.array): true labels.
+            y_hat (list or numpy.array): predicted labels.
+
+        """
+        plt.figure(figsize=(8, 8))
+        linear_regressor = sklearn.linear_model.LinearRegression()
+        linear_regressor.fit(y.reshape(-1, 1), y_hat)
+        y_pred = linear_regressor.predict(y.reshape(-1, 1))
+        plt.plot(y, y_pred, c="red", linewidth=3, alpha=0.5)
+        plt.scatter(y, y_hat, s=30, c="deepskyblue")
+        plt.xticks(size=15)
+        plt.yticks(size=15)
+        plt.ylabel('$\hat{y}$', size=15)
+        plt.xlabel('y', size=15)
         plt.show()
 
-    def cross_validation(self, alpha_range, max_iter=1e6, tol=1e-4, plot_image=False):
+    def cross_validation(self, alpha_range, max_iter=1e6, tol=1e-4, plot_image=False, seed=2020):
+        """
+         Cross validation test over a range of alpha.
+
+         Args:
+             alpha_range (list): a list of alpha values.
+             max_iter (int): The maximum number of iterations.
+             tol (int): The tolerance for the optimization.
+             plot_image (bool): Whether to plot y vs y_hat plot.
+             seed (int): numpy random seed for shuffling data.
+
+         """
         data = self.training_data.copy()
+        np.random.seed(seed)
         np.random.shuffle(data)
         training_x = data[:, 1:]
         training_y = data[:, 0]
@@ -71,8 +120,8 @@ class PotentialTrainer:
                 error_validation = np.average(np.absolute(validation_y - predicted_validation) / num_array_validation)
                 error_train = np.average(np.absolute(train_y - predicted_train) / num_array_train)
                 if i == 0 and plot_image:
-                    self.plot_y_yhat(train_y, predicted_train)
-                    self.plot_y_yhat(validation_y, predicted_validation)
+                    self.plot_y_yhat(train_y/num_array_train, predicted_train/num_array_train)
+                    self.plot_y_yhat(validation_y/num_array_validation, predicted_validation/num_array_validation)
                 errors_validation.append(error_validation)
                 errors_train.append(error_train)
             print("Mean error train: {} eV/atom".format(np.mean(errors_train)))
@@ -88,6 +137,16 @@ class PotentialTrainer:
 
     @staticmethod
     def plot_cross(param, error, y_low, y_up):
+        """
+         Hyperparameter vs error plotter.
+
+         Args:
+             param (numpy.array or list): a list of alpha values.
+             error (numpy.array or list): The maximum number of iterations.
+             y_low (float): y axis lower limit.
+             y_up (float): y axis upper limit.
+
+         """
         x = np.arange(len(error))
         plt.plot(x, error, linewidth=2, color='red', marker='.', markersize=12)
         plt.xticks(x, param)
@@ -97,7 +156,17 @@ class PotentialTrainer:
         plt.show()
 
     def make_potential(self, output_dir, alpha=1.0, max_iter=1e6, tol=1e-4):
-        model = sklearn.linear_model.Ridge(alpha=alpha, max_iter=max_iter, tol=tol, fit_intercept=False)
+        """
+         Generate and save Re potential.
+
+         Args:
+             output_dir (str): directory to save the potential file.
+             alpha (float): Constant that multiplies the penalization term.
+             max_iter (int): The maximum number of iterations.
+             tol (int): The tolerance for the optimization.
+
+         """
+        model = self.f(alpha=alpha, max_iter=max_iter, tol=tol, fit_intercept=False)
         model.fit(self.training_x, self.training_y)
         potential = model.coef_[0]
         print("Fitted potential: ", potential)
