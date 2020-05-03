@@ -177,7 +177,3 @@ class PotentialTrainer:
             for i in range(len(potential)):
                 f.write(str(potential[i]) + "\n")
             f.close()
-
-
-# pt = PotentialTrainer("/Users/th/Downloads/datafiles/re.mat", "RIDGE")
-# pt.cross_validation([0, 0.01, 0.001, 0.0001, 0.00001])

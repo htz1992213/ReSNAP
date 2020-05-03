@@ -346,9 +346,3 @@ class FeatureMaker:
                 {'X': self.training_samples, 'y': self.training_energy})
         print('\n')
         print('Sample file ' + filename + ' saved.')
-
-
-# fm = FeatureMaker(XSF_DIR, DATA_DIR,
-#                   {"rcutfac": 1.4, "rfac0": 0.95, "twojmax": 6, "R_1": 2.0},
-#                   mode="structure", screen=False)
-# fm.save_samples(DATA_DIR, "re.mat")
