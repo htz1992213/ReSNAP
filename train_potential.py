@@ -1,11 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import sklearn as skl
 import sklearn.linear_model
+from sklearn.preprocessing import normalize
 from scipy import io
 import os
 import scipy as sp
-from sklearn.metrics import accuracy_score
 
 np.random.seed(2020)
 
@@ -13,17 +12,17 @@ OUTPUT_DIR = "/Users/th/Downloads/datafiles"
 MODELS = {
     "SVD": sp.linalg.lstsq,
     "LASSO":
-        skl.linear_model.Lasso,
+        sklearn.linear_model.Lasso,
     "RIDGE":
-        skl.linear_model.Ridge,
+        sklearn.linear_model.Ridge,
     "ELASTIC":
-        skl.linear_model.ElasticNet
+        sklearn.linear_model.ElasticNet
 }
 
 
 class PotentialTrainer:
 
-    def __init__(self, data_dir, f):
+    def __init__(self, data_dir, f, norm=None):
         self.data_dir = data_dir
         self.f = MODELS.get(f)
         data = io.loadmat(self.data_dir)
@@ -31,6 +30,12 @@ class PotentialTrainer:
             print("\nloaded %s data!" % data_name)
             print(data[data_name].shape)
         self.training_x = data.get('X')
+        self.norm = norm
+        if self.norm:
+            features = self.training_x[:, 1:]
+            features, norms = normalize(features, norm=self.norm, axis=0, copy=True, return_norm=True)
+            self.norms = norms
+            self.training_x[:, 1:] = features
         self.training_y = data.get('y')
         self.training_data = np.concatenate((self.training_y, self.training_x), axis=1)
 
@@ -41,7 +46,7 @@ class PotentialTrainer:
         plt.xlabel('y')
         plt.show()
 
-    def cross_validation(self, alpha_range, max_iter=1E6, plot_image=False):
+    def cross_validation(self, alpha_range, max_iter=1e6, tol=1e-4, plot_image=False):
         data = self.training_data.copy()
         np.random.shuffle(data)
         training_x = data[:, 1:]
@@ -59,8 +64,7 @@ class PotentialTrainer:
                 train_x, train_y = training_x[train_id], training_y[train_id]
                 validation_x,  validation_y = training_x[validation_id],  training_y[validation_id]
                 num_array_train, num_array_validation = num_array[train_id], num_array[validation_id]
-                model = self.f(alpha=alpha, max_iter=max_iter, tol=1e-4,
-                               solver='auto', fit_intercept=False)
+                model = self.f(alpha=alpha, max_iter=max_iter, tol=tol, fit_intercept=False)
                 model.fit(train_x, train_y)
                 predicted_validation = model.predict(validation_x)
                 predicted_train = model.predict(train_x)
@@ -75,8 +79,8 @@ class PotentialTrainer:
             print("Mean error validaiton: {} eV/atom".format(np.mean(errors_validation)))
             alpha_errors.append(np.mean(errors_validation))
         alpha_errors = np.array(alpha_errors)
-        max_e = alpha_errors.max()
-        min_e = alpha_errors.min()
+        max_e = max(alpha_errors)
+        min_e = min(alpha_errors)
         diff = max_e - min_e
         print(alpha_errors)
         self.plot_cross(alpha_range, alpha_errors, min_e - diff, max_e + diff)
@@ -92,15 +96,19 @@ class PotentialTrainer:
         plt.xlabel('Hyperparameter')
         plt.show()
 
-    def make_potential(self, output_dir, alpha=1.0):
-        model = skl.linear_model.Ridge(alpha=alpha, max_iter=1E6, tol=1e-4, fit_intercept=False)
+    def make_potential(self, output_dir, alpha=1.0, max_iter=1e6, tol=1e-4):
+        model = sklearn.linear_model.Ridge(alpha=alpha, max_iter=max_iter, tol=tol, fit_intercept=False)
         model.fit(self.training_x, self.training_y)
         potential = model.coef_[0]
+        print("Fitted potential: ", potential)
+        if self.norm:
+            potential = potential / self.norms
+            print("Fitted unnormalized potential: ", potential)
         with open(os.path.join(output_dir, "re_potential"), 'w') as f:
             for i in range(len(potential)):
                 f.write(str(potential[i]) + "\n")
             f.close()
 
 
-#pt = PotentialTrainer("/Users/th/Downloads/datafiles/re.mat", "RIDGE")
-#pt.cross_validation([0, 0.01, 0.001, 0.0001, 0.00001])
+# pt = PotentialTrainer("/Users/th/Downloads/datafiles/re.mat", "RIDGE")
+# pt.cross_validation([0, 0.01, 0.001, 0.0001, 0.00001])

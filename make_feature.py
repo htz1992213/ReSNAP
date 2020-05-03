@@ -190,10 +190,10 @@ class FeatureMaker:
                         if l.startswith(begin_flag):
                             begin_i = i + 1
                             break
-            except:
+                    line = lines[begin_i].split()
+            except FileNotFoundError or TypeError:
                 print('Unable to read log')
                 sys.exit()
-            line = lines[begin_i].split()
             array = [float(n_i)]
             for num in line:
                 array.append(float(num))
@@ -203,11 +203,11 @@ class FeatureMaker:
             try:
                 with open(os.path.join(log_dir, filename), "r") as f:
                     lines = f.readlines()
-            except:
+                    atom_lines = lines[9:]
+            except FileNotFoundError or TypeError:
                 print('Unable to read dump')
                 sys.exit()
             arrays = []
-            atom_lines = lines[9:]
             for i, line in enumerate(atom_lines):
                 line = line.split()
                 array = [float(1)]
@@ -329,7 +329,7 @@ class FeatureMaker:
         print('Sample file ' + filename + ' saved.')
 
 
-#fm = FeatureMaker(XSF_DIR, DATA_DIR,
-#                  {"rcutfac": 1.4, "rfac0": 0.95, "twojmax": 6, "R_1": 2.0},
-#                  mode="structure", screen=False)
-#fm.save_samples(DATA_DIR, "re.mat")
+# fm = FeatureMaker(XSF_DIR, DATA_DIR,
+#                   {"rcutfac": 1.4, "rfac0": 0.95, "twojmax": 6, "R_1": 2.0},
+#                   mode="structure", screen=False)
+# fm.save_samples(DATA_DIR, "re.mat")
