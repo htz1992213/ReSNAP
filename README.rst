@@ -15,7 +15,7 @@ If not available already, use the following steps.
 
 #. Download the ReSNAP source code using the command::
 
-    git clone https://bitbucket.org/htz1992213/ReSNAP.git
+    git clone https://github.com/htz1992213/ReSNAP.git
     
 Installation
 ------------
