@@ -24,8 +24,6 @@ __maintainer__ = "Lu Jiang"
 __email__ = "lu_jiang@berkeley.edu"
 __date__ = "May 3, 2020"
 
-OUTPUT_DIR = "/Users/th/Downloads/datafiles"
-
 MODELS = {"SVD": sp.linalg.lstsq,
           "LASSO": sklearn.linear_model.Lasso,
           "RIDGE": sklearn.linear_model.Ridge,
@@ -91,7 +89,7 @@ class PotentialTrainer:
          Cross validation test over a range of alpha.
 
          Args:
-             alpha_range (list): a list of alpha values.
+             alpha_range (list or numpy.array): a list of alpha values.
              max_iter (int): The maximum number of iterations.
              tol (int): The tolerance for the optimization.
              plot_image (bool): Whether to plot y vs y_hat plot.

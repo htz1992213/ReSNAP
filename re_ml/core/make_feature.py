@@ -71,10 +71,6 @@ timestep            0.001
 
 run               0'''
 
-XSF_DIR = "/Users/th/Downloads/xsffiles/"
-
-DATA_DIR = '/Users/th/Downloads/datafiles/'
-
 
 class FeatureMaker:
 
