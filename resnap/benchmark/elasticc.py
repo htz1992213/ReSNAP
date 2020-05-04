@@ -1,6 +1,7 @@
 from resnap.benchmark.structure import Structure
 from pymatgen.io.lammps.outputs import parse_lammps_log
 import numpy as np
+import argparse
 import os
 import shutil
 import time
@@ -9,14 +10,16 @@ import math
 
 class ElasticJob:
 
-    def __init__(self, job="make", timer=5, etamin=-0.008, etamax=0.009,
+    def __init__(self, directory, job="make", timer=5, etamin=-0.008, etamax=0.009,
                  etastep=0.002):
+        self.eta = np.arange(etamin, etamax, etastep)
         self.f_tensor = self.get_f_tensor()
         self.timer = timer
         self.job = job
-        self.eta = np.arange(etamin, etamax, etastep)
+        self.directory = directory
 
     def do_job(self):
+        os.chdir(self.directory)
         if self.job == "getEF":
             self.get_data()
         elif self.job == 'make' or self.job == 'makenrun':
@@ -52,37 +55,37 @@ class ElasticJob:
             for n in range(len(self.eta)):
                 strdir = "s"+str(m+1)+"_%.2f" % (self.eta[n]*100)
                 os.chdir(strdir)
-
-                f = open('log.lammps', 'r')
-                data = f.readlines()
-                f.close()
-
-                nums = list()
-                for k in range(len(data)):
-                    if data[k].find("Loop time") > -1:
-                        nums = data[k-1].split()
-                nums = [float(num) for num in nums]
-                [step, energy_ij, pxx, pyy, pzz, pxy, pxz, pyz] = nums
+                df = parse_lammps_log('log.lammps')
+                energy_ij = float(df[0].iloc[-1, :][["energy_ij"]])
+                pxx = float(df[0].iloc[-1, :][["pxx"]])
+                pyy = float(df[0].iloc[-1, :][["pyy"]])
+                pzz = float(df[0].iloc[-1, :][["pzz"]])
+                pxy = float(df[0].iloc[-1, :][["pxy"]])
+                pxz = float(df[0].iloc[-1, :][["pxz"]])
+                pyz = float(df[0].iloc[-1, :][["pyz"]])
                 energy_i.append(energy_ij)
                 stress.append([pxx, pyy, pzz, pxy, pxz, pyz])
-
                 os.chdir('..')
 
-            fs = open("stress_"+str(m+1), "w")
-            fs.write("eta range: ")
-            for j in range(len(self.eta)):
-                fs.write("%.5f    " % self.eta[j])
-            fs.write("\n")
-            fs.write("pxx    pyy    pzz    pxy    pxz    pyz\n")
-
-            for j in range(len(self.eta)):
-                for k in range(6):
-                    fs.write("%.5f    " % stress[j][k])
-                fs.write("\n")
-            fs.close()
-
+            self.write_stress(m, stress)
             energy.append(energy_i)
+        self.write_energy(energy)
 
+    def write_stress(self, m, stress):
+        fs = open("stress_" + str(m + 1), "w")
+        fs.write("eta range: ")
+        for j in range(len(self.eta)):
+            fs.write("%.5f    " % self.eta[j])
+        fs.write("\n")
+        fs.write("pxx    pyy    pzz    pxy    pxz    pyz\n")
+
+        for j in range(len(self.eta)):
+            for k in range(6):
+                fs.write("%.5f    " % stress[j][k])
+            fs.write("\n")
+        fs.close()
+
+    def write_energy(self, energy):
         fe = open("energy_data", "w")
         fe.write("eta range: \n")
         for m in range(len(self.eta)):
@@ -154,3 +157,39 @@ class ElasticJob:
         f += [f7]
 
         return f
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+
+    # -db DATABSE -u USERNAME -p PASSWORD -size 20
+    parser.add_argument("-d", "--directory", help="Working directory",
+                        type=str, default=os.getcwd())
+    parser.add_argument("-j", "--job", help="Job type",
+                        type=str, default="make")
+    parser.add_argument("-t", "--timer", help="Job submission interval",
+                        type=int, default=5)
+    parser.add_argument("-min", "--etamin", help="eta min",
+                        type=float, default=-0.008)
+    parser.add_argument("-max", "--etamax", help="eta max",
+                        type=float, default=0.009)
+    parser.add_argument("-step", "--etastep", help="eta step",
+                        type=float, default=0.002)
+
+    args = parser.parse_args()
+
+    print("Working dir: ", args.directory)
+    print("Job type: ", args.job)
+    print("Timer: ", args.timer)
+    print("eta: ", args.etamin, args.etamax, args.etastep)
+
+    job_instance = ElasticJob(args.directory,
+                              job=args.job,
+                              timer=args.timer,
+                              etamin=args.etamin,
+                              etamax=args.etamax,
+                              etastep=args.etastep)
+    job_instance.do_job()
+
+    print("Job done.")
+
