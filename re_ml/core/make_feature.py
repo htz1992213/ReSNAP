@@ -75,7 +75,7 @@ run               0'''
 class FeatureMaker:
 
     def __init__(self, xsf_dir, data_dir, sna_setting, mode="structure",
-                 screen=None):
+                 screen=None, num_of_samples=6500):
         """
         Base constructor.
 
@@ -93,6 +93,7 @@ class FeatureMaker:
         self.run_dir = data_dir
         self.sna_setting = sna_setting
         self.screen = screen
+        self.nos = num_of_samples
         self.generate_data()
         if mode == "structure":
             self.mode = mode
@@ -134,12 +135,13 @@ class FeatureMaker:
             os.makedirs(self.data_dir)
         shutil.copyfile(os.path.join(self.xsf_dir, 'Zr_3.eam.fs'),
                         os.path.join(self.data_dir, 'Zr_3.eam.fs'))
-        for i in tqdm(range(6500)):
+        for i in tqdm(range(self.nos)):
             filename = "vasprun" + str((i + 1)) + ".xsf"
             with open(os.path.join(self.xsf_dir, filename), 'r') as f:
                 try:
                     vasprun = read_xsf(f)
-                    write_lammps_data(self.data_dir + filename[:-4] + ".data",
+                    write_lammps_data(os.path.join(self.data_dir,
+                                                   filename[:-4] + ".data"),
                                       vasprun)
                 except UnicodeDecodeError:
                     print(filename)
@@ -178,7 +180,7 @@ class FeatureMaker:
         print('\n')
         print('Running lammps...')
         os.chdir(self.run_dir)
-        for i in tqdm(range(6500)):
+        for i in tqdm(range(self.nos)):
             dataname = "vasprun" + str((i + 1)) + ".data"
             inputname = "vasprun" + str((i + 1)) + ".input"
             settings = {'filename': dataname}
@@ -260,14 +262,14 @@ class FeatureMaker:
         print('Reading lammps logs...')
         samples = []
         if mode == "structure":
-            for i in tqdm(range(6500)):
+            for i in tqdm(range(self.nos)):
                 logname = "vasprun" + str((i + 1)) + ".data.log"
                 sample = self.read_log(self.log_dir, logname, n[i], mode)
                 samples.append(sample)
             samples = np.array(samples)
             return samples
         elif mode == "atom":
-            for i in tqdm(range(6500)):
+            for i in tqdm(range(self.nos)):
                 logname = "vasprun" + str((i + 1)) + ".data.dump"
                 sample = self.read_log(self.log_dir, logname, n[i], mode)
                 samples.append(sample)
@@ -293,7 +295,7 @@ class FeatureMaker:
         print('Reading energy...')
         energy = []
         if mode == "structure":
-            for i in tqdm(range(6500)):
+            for i in tqdm(range(self.nos)):
                 filename = "vasprun" + str((i + 1)) + ".xsf"
                 with open(os.path.join(self.xsf_dir, filename), 'r') as f:
                     line = f.readlines()[0]
@@ -302,7 +304,7 @@ class FeatureMaker:
             energy = np.array(energy)
             return energy.reshape(-1, 1)
         elif mode == "atom":
-            for i in tqdm(range(6500)):
+            for i in tqdm(range(self.nos)):
                 filename = "vasprun" + str((i + 1)) + ".xsf"
                 with open(os.path.join(self.xsf_dir, filename), 'r') as f:
                     line = f.readlines()[0]
@@ -326,7 +328,7 @@ class FeatureMaker:
         print('\n')
         print('Reading numbers of atoms...')
         num_array = []
-        for i in tqdm(range(6500)):
+        for i in tqdm(range(self.nos)):
             dataname = "vasprun" + str((i + 1)) + ".data"
             with open(os.path.join(self.data_dir, dataname), 'r') as f:
                 line = f.readlines()[2]
