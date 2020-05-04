@@ -5,7 +5,7 @@ re_ml is a code base to train an atomic potential for Re using machine learning 
 
 Requirements
 ------------
-PyCDT requires ase, tqdm, lammps, shutil, sklearn, pymatgen (and their dependencies).
+re_ml requires ase, tqdm, lammps, sklearn, pymatgen (and their dependencies).
 
 Source Code
 ------------
