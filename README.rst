@@ -13,9 +13,9 @@ If not available already, use the following steps.
 
 #. Install `git <http://git-scm.com>`_, if not already packaged with your system.
 
-#. Download the pycdt source code using the command::
+#. Download the re_ml source code using the command::
 
-    git clone https://bitbucket.org/mbkumar/pycdt.git
+    git clone https://bitbucket.org/htz1992213/re_ml.git
     
 Installation
 ------------
