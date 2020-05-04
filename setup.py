@@ -10,7 +10,7 @@ if __name__ == "__main__":
         version='2020.5.3',
         packages=find_packages(),
         install_requires=["ase", "tqdm", "lammps", "matplotlib", "scikit-learn",
-                          "numpy", "scipy", "pymatgen"],
+                          "numpy", "scipy", "monty", "pymatgen"],
         description='Repository for training Re potential',
         python_requires='>=3.6'
     )
