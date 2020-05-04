@@ -79,8 +79,8 @@ class PotentialTrainer:
         plt.scatter(y, y_hat, s=30, c="deepskyblue")
         plt.xticks(size=15)
         plt.yticks(size=15)
-        plt.ylabel('$\hat{y}$', size=15)
-        plt.xlabel('y', size=15)
+        plt.ylabel('$\hat{y}$ (eV/atom)', size=15)
+        plt.xlabel('y (eV/atom)', size=15)
         plt.show()
 
     def cross_validation(self, alpha_range, max_iter=1e6, tol=1e-4,
