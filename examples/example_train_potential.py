@@ -1,7 +1,7 @@
 import os
 import numpy as np
 
-from re_ml.core.train_potential import PotentialTrainer
+from resnap.core.train_potential import PotentialTrainer
 
 DATA_DIR = os.path.dirname(__file__)
 

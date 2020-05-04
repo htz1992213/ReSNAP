@@ -34,3 +34,4 @@ Examples
 From the Re_SNAP root folder, go to examples folder by typing::
 
     cd examples
+
