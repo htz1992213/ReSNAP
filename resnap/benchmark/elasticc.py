@@ -1,4 +1,5 @@
 from resnap.benchmark.structure import Structure
+from pymatgen.io.lammps.outputs import parse_lammps_log
 import numpy as np
 import os
 import shutil
@@ -6,159 +7,150 @@ import time
 import math
 
 
-etamin = -0.008
-etamax = 0.009
-etastep = 0.002
+class ElasticJob:
 
-job = 'make'  # 'make' 'makenrun', 'getEF'
-timer = 5
+    def __init__(self, job="make", timer=5, etamin=-0.008, etamax=0.009,
+                 etastep=0.002):
+        self.f_tensor = self.get_f_tensor()
+        self.timer = timer
+        self.job = job
+        self.eta = np.arange(etamin, etamax, etastep)
 
+    def do_job(self):
+        if self.job == "getEF":
+            self.get_data()
+        elif self.job == 'make' or self.job == 'makenrun':
+            for i in range(7):
+                for j in range(len(self.eta)):
+                    strdir = "s" + str(i + 1) + "_%.2f" % (self.eta[j] * 100)
+                    os.mkdir(strdir)  # Make directory si_j
+                    # copy relavent files to new directory
+                    shutil.copy("Reunit.dat", strdir)
+                    shutil.copy("Re_3.snapcoeff", strdir)
+                    shutil.copy("Re_3.snapparam", strdir)
+                    shutil.copy("input.lmp", strdir)
+                    shutil.copy("submit", strdir)
 
-eta = np.arange(etamin, etamax, etastep)
+                    os.chdir(strdir)
 
+                    cell = Structure("LAMMPSdat", "Reunit.dat")
+                    cell.addstrain(self.f_tensor[i][j])
+                    cell.write_lammps_data("Reunit.dat", "Re")
 
-def get_tensor():
-        
-    F = []
-    F1 = []
-    for i in range(len(eta)):
-        Fi = np.eye(3)
-        Fi[0][0] = math.sqrt(2*eta[i]+1)
-        F1 += [Fi]
-    F += [F1]
+                    # submit the job
+                    if self.job == 'makenrun':
+                        time.sleep(self.timer)
+                        os.system('sbatch submit')
 
-    F2 = []
-    for i in range(len(eta)):
-        Fi = np.eye(3)
-        Fi[0][0] = math.sqrt(2*eta[i]+1)
-        Fi[1][1] = math.sqrt(2*eta[i]+1)
-        F2 += [Fi]
-    F += [F2]
+                    os.chdir('..')
 
+    def get_data(self):
+        energy = []
+        for m in range(7):
+            energy_i = []
+            stress = []
+            for n in range(len(self.eta)):
+                strdir = "s"+str(m+1)+"_%.2f" % (self.eta[n]*100)
+                os.chdir(strdir)
 
-    F3 = []
-    for i in range(len(eta)):
-        Fi = np.eye(3)
-        Fi[2][2] = math.sqrt(2*eta[i]+1)
-        F3 += [Fi]
-    F += [F3]
+                f = open('log.lammps', 'r')
+                data = f.readlines()
+                f.close()
 
-    F4 = []
-    for i in range(len(eta)):
-        Fi = np.eye(3)
-        Fi[1][1] = math.sqrt(2*eta[i]+1)
-        Fi[2][2] = math.sqrt(2*eta[i]+1)
-        F4 += [Fi]
-    F += [F4]
+                nums = list()
+                for k in range(len(data)):
+                    if data[k].find("Loop time") > -1:
+                        nums = data[k-1].split()
+                nums = [float(num) for num in nums]
+                [step, energy_ij, pxx, pyy, pzz, pxy, pxz, pyz] = nums
+                energy_i.append(energy_ij)
+                stress.append([pxx, pyy, pzz, pxy, pxz, pyz])
 
+                os.chdir('..')
 
-    F5 = []
-    for i in range(len(eta)):
-        Fi = np.eye(3)
-        Fi[2][2] = math.sqrt(1-4*(eta[i]**2))
-        Fi[1][2] = 2*eta[i]
-        F5 += [Fi]
-    F += [F5]
-
-
-    F6 = []
-    for i in range(len(eta)):
-        Fi = np.eye(3)
-        Fi[2][2] = math.sqrt(1-4*(eta[i]**2))
-        Fi[0][2] = 2*eta[i]
-        F6 += [Fi]
-    F += [F6]
-
-    F7 = []
-    for i in range(len(eta)):
-        Fi = np.eye(3)
-        Fi[1][1] = math.sqrt(1-4*(eta[i]**2))
-        Fi[0][1] = 2*eta[i]
-        F7 += [Fi]
-    F += [F7]
-
-    return F
-
-
-tensor = get_tensor()
-
-
-if job == 'make' or job == 'makenrun':
-    for i in range(7):
-        for j in range(len(eta)):
-            strdir = "s"+str(i+1)+"_%.2f" % (eta[j]*100)
-            os.mkdir(strdir)  # Make directory si_j
-        # copy relavent files to new directory
-            shutil.copy("Reunit.dat", strdir)
-            shutil.copy("Re_3.snapcoeff", strdir)
-            shutil.copy("Re_3.snapparam", strdir)
-            shutil.copy("input.lmp", strdir)
-            shutil.copy("submit", strdir)
-
-            os.chdir(strdir)
-
-            cell = Structure("LAMMPSdat", "Reunit.dat")
-            cell.addstrain(tensor[i][j])
-            cell.write_lammps_data("Reunit.dat", "Re")
-
-        # submit the job
-            if job == 'makenrun':
-                time.sleep(timer)
-                os.system('sbatch submit')
-
-            os.chdir('..')
-
-
-def getdata():
-    energy = []
-    for m in range(7):
-        energy_i = []
-        stress = []
-        for n in range(len(eta)):
-            strdir = "s"+str(m+1)+"_%.2f" % (eta[n]*100)
-            os.chdir(strdir)
-
-            f = open('log.lammps', 'r')
-            data = f.readlines()
-            f.close()
-
-            for k in range(len(data)):
-                if data[k].find("Loop time") > -1:
-                    nums = data[k-1].split()
-            nums = [float(num) for num in nums]
-            [step, energy_ij, pxx, pyy, pzz, pxy, pxz, pyz] = nums 
-            energy_i.append(energy_ij)
-            stress.append([pxx, pyy, pzz, pxy, pxz, pyz])
-
-            os.chdir('..')
-
-        fs = open("stress_"+str(m+1), "w")
-        fs.write("eta range: ")
-        for j in range(len(eta)):
-            fs.write("%.5f    " % eta[j])
-        fs.write("\n")
-        fs.write("pxx    pyy    pzz    pxy    pxz    pyz\n")
-
-        for j in range(len(eta)):
-            for k in range(6):
-                fs.write("%.5f    " % stress[j][k])
+            fs = open("stress_"+str(m+1), "w")
+            fs.write("eta range: ")
+            for j in range(len(self.eta)):
+                fs.write("%.5f    " % self.eta[j])
             fs.write("\n")
-        fs.close()
+            fs.write("pxx    pyy    pzz    pxy    pxz    pyz\n")
 
-        energy.append(energy_i)
+            for j in range(len(self.eta)):
+                for k in range(6):
+                    fs.write("%.5f    " % stress[j][k])
+                fs.write("\n")
+            fs.close()
 
-    fe = open("energy_data", "w")
-    fe.write("eta range: \n")
-    for m in range(len(eta)):
-        fe.write("%.5f    " % eta[m])
-    fe.write("\n")
-    fe.write("energy (eV): \n")
-    for m in range(len(energy)):
-        for n in range(len(eta)):
-            fe.write("%.5f    " % energy[m][n])
+            energy.append(energy_i)
+
+        fe = open("energy_data", "w")
+        fe.write("eta range: \n")
+        for m in range(len(self.eta)):
+            fe.write("%.5f    " % self.eta[m])
         fe.write("\n")
-    fe.close()
+        fe.write("energy (eV): \n")
+        for m in range(len(energy)):
+            for n in range(len(self.eta)):
+                fe.write("%.5f    " % energy[m][n])
+            fe.write("\n")
+        fe.close()
 
+    def get_f_tensor(self):
 
-if job == 'getEF':
-    getdata()
+        f = []
+
+        f1 = []
+        for i in range(len(self.eta)):
+            fi = np.eye(3)
+            fi[0][0] = math.sqrt(2*self.eta[i]+1)
+            f1 += [fi]
+        f += [f1]
+
+        f2 = []
+        for i in range(len(self.eta)):
+            fi = np.eye(3)
+            fi[0][0] = math.sqrt(2*self.eta[i]+1)
+            fi[1][1] = math.sqrt(2*self.eta[i]+1)
+            f2 += [fi]
+        f += [f2]
+
+        f3 = []
+        for i in range(len(self.eta)):
+            fi = np.eye(3)
+            fi[2][2] = math.sqrt(2*self.eta[i]+1)
+            f3 += [fi]
+        f += [f3]
+
+        f4 = []
+        for i in range(len(self.eta)):
+            fi = np.eye(3)
+            fi[1][1] = math.sqrt(2*self.eta[i]+1)
+            fi[2][2] = math.sqrt(2*self.eta[i]+1)
+            f4 += [fi]
+        f += [f4]
+
+        f5 = []
+        for i in range(len(self.eta)):
+            fi = np.eye(3)
+            fi[2][2] = math.sqrt(1-4*(self.eta[i]**2))
+            fi[1][2] = 2*self.eta[i]
+            f5 += [fi]
+        f += [f5]
+
+        f6 = []
+        for i in range(len(self.eta)):
+            fi = np.eye(3)
+            fi[2][2] = math.sqrt(1-4*(self.eta[i]**2))
+            fi[0][2] = 2*self.eta[i]
+            f6 += [fi]
+        f += [f6]
+
+        f7 = []
+        for i in range(len(self.eta)):
+            fi = np.eye(3)
+            fi[1][1] = math.sqrt(1-4*(self.eta[i]**2))
+            fi[0][1] = 2*self.eta[i]
+            f7 += [fi]
+        f += [f7]
+
+        return f
