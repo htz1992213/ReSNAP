@@ -25,7 +25,7 @@ Installation
 
 2. Install the code, using the command::
 
-    python setup.py install
+    pip install .
 
 
 Examples
