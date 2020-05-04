@@ -1,4 +1,4 @@
-from ..re_ml.core.make_feature import FeatureMaker
+from re_ml.core.make_feature import FeatureMaker
 
 XSF_DIR = "/Users/th/Downloads/xsffiles/"
 

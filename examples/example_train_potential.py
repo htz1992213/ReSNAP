@@ -1,4 +1,4 @@
-from ..re_ml.core.train_potential import PotentialTrainer
+from re_ml.core.train_potential import PotentialTrainer
 import numpy as np
 import os
 
