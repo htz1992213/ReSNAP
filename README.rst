@@ -19,7 +19,7 @@ If not available already, use the following steps.
     
 Installation
 ------------
-1. Navigate to pycdt root directory::
+1. Navigate to re_ml root directory::
 
     cd re_ml
 
@@ -31,6 +31,6 @@ Installation
 Examples
 --------
 
-From the pycdt root folder, go to examples folder by typing::
+From the re_ml root folder, go to examples folder by typing::
 
     cd examples
