@@ -3,6 +3,7 @@ from pymatgen.io.lammps.outputs import parse_lammps_log
 import numpy as np
 import argparse
 import os
+import sys
 import shutil
 import time
 import math
@@ -10,8 +11,8 @@ import math
 
 class ElasticJob:
 
-    def __init__(self, directory, job="make", timer=5, etamin=-0.008, etamax=0.009,
-                 etastep=0.002):
+    def __init__(self, directory, job="make", timer=5, etamin=-0.008,
+                 etamax=0.009, etastep=0.002):
         valid = {"make", "makerun", "getEF"}
         if job not in valid:
             raise ValueError("Job type must be of of %r." % valid)
@@ -162,10 +163,11 @@ class ElasticJob:
         return f
 
 
-if __name__ == '__main__':
+def main(args):
     parser = argparse.ArgumentParser()
 
-    # -db DATABSE -u USERNAME -p PASSWORD -size 20
+    # -d DIRECTORY -j {make,makerun,getEF} -t TIMER -min STAMIN -max ETAMAX
+    # -step ETASTEP
     parser.add_argument("-d", "--directory", help="Working directory",
                         type=str, default=os.getcwd())
     parser.add_argument("-j", "--job", help="Job type",
@@ -179,7 +181,7 @@ if __name__ == '__main__':
     parser.add_argument("-step", "--etastep", help="eta step",
                         type=float, default=0.002)
 
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     print("Working dir: ", args.directory)
     print("Job type: ", args.job)
@@ -196,3 +198,6 @@ if __name__ == '__main__':
 
     print("Job done.")
 
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
