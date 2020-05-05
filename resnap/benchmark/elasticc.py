@@ -12,6 +12,9 @@ class ElasticJob:
 
     def __init__(self, directory, job="make", timer=5, etamin=-0.008, etamax=0.009,
                  etastep=0.002):
+        valid = {"make", "makerun", "getEF"}
+        if job not in valid:
+            raise ValueError("Job type must be of of %r." % valid)
         self.eta = np.arange(etamin, etamax, etastep)
         self.f_tensor = self.get_f_tensor()
         self.timer = timer
@@ -56,13 +59,13 @@ class ElasticJob:
                 strdir = "s"+str(m+1)+"_%.2f" % (self.eta[n]*100)
                 os.chdir(strdir)
                 df = parse_lammps_log('log.lammps')
-                energy_ij = float(df[0].iloc[-1, :][["energy_ij"]])
-                pxx = float(df[0].iloc[-1, :][["pxx"]])
-                pyy = float(df[0].iloc[-1, :][["pyy"]])
-                pzz = float(df[0].iloc[-1, :][["pzz"]])
-                pxy = float(df[0].iloc[-1, :][["pxy"]])
-                pxz = float(df[0].iloc[-1, :][["pxz"]])
-                pyz = float(df[0].iloc[-1, :][["pyz"]])
+                energy_ij = float(df[0].iloc[-1, :][["TotEng"]])
+                pxx = float(df[0].iloc[-1, :][["Pxx"]])
+                pyy = float(df[0].iloc[-1, :][["Pyy"]])
+                pzz = float(df[0].iloc[-1, :][["Pzz"]])
+                pxy = float(df[0].iloc[-1, :][["Pxy"]])
+                pxz = float(df[0].iloc[-1, :][["Pxz"]])
+                pyz = float(df[0].iloc[-1, :][["Pyz"]])
                 energy_i.append(energy_ij)
                 stress.append([pxx, pyy, pzz, pxy, pxz, pyz])
                 os.chdir('..')
@@ -166,7 +169,7 @@ if __name__ == '__main__':
     parser.add_argument("-d", "--directory", help="Working directory",
                         type=str, default=os.getcwd())
     parser.add_argument("-j", "--job", help="Job type",
-                        type=str, default="make")
+                        choices=['make', 'makerun', 'getEF'], default="make")
     parser.add_argument("-t", "--timer", help="Job submission interval",
                         type=int, default=5)
     parser.add_argument("-min", "--etamin", help="eta min",
