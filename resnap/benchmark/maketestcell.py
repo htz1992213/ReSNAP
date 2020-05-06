@@ -3,8 +3,18 @@ import os
 import numpy as np
 from monty.serialization import loadfn
 
-# This file is to making four-atom tetragonal cell
-# for the elastic constants calculation.
+"""
+This module implements a core class UnitCell for generating 
+lammps data file of four-atom tetragonal cell for the 
+elastic constants calculation of a metal.
+"""
+
+__author__ = "Lu Jiang and Tingzheng Hou"
+__copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"
+__version__ = "1.0"
+__maintainer__ = "Lu Jiang"
+__email__ = "lu_jiang@berkeley.edu"
+__date__ = "May 3, 2020"
 
 
 class UnitCell:

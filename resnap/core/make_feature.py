@@ -10,10 +10,7 @@ parsing the lammps outputs, and generating training data file.
 """
 
 import numpy as np
-from ase.io.xsf import read_xsf
-from ase.io.lammpsdata import write_lammps_data
 from tqdm import tqdm
-from lammps import lammps
 from pymatgen.io.lammps.inputs import write_lammps_inputs
 from scipy.io import savemat
 import os
@@ -21,6 +18,19 @@ import re
 import shutil
 import sys
 import warnings
+
+try:
+    from ase.io.xsf import read_xsf
+    from ase.io.lammpsdata import write_lammps_data
+    ase_loaded = True
+except ImportError:
+    ase_loaded = False
+
+try:
+    from lammps import lammps
+    lammps_loaded = True
+except ImportError:
+    lammps_loaded = False
 
 __author__ = "Tingzheng Hou and Lu Jiang"
 __copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"

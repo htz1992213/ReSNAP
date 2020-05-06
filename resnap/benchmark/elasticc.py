@@ -8,6 +8,19 @@ import shutil
 import time
 import math
 
+"""
+This module implements a core class ElasticJob that support 
+lammps data/imput/log files i/o for calculating elastic 
+constant of Re .
+"""
+
+__author__ = "Lu Jiang and Tingzheng Hou"
+__copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"
+__version__ = "1.0"
+__maintainer__ = "Lu Jiang"
+__email__ = "lu_jiang@berkeley.edu"
+__date__ = "May 3, 2020"
+
 
 class ElasticJob:
 

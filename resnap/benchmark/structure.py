@@ -1,14 +1,26 @@
 import math
 import numpy as np
 
-# the class structure has the following properties:
-# natoms, lna = [a,b,c,alpha,beta,gamma], lattice, cartesianc, directc
-# the lattice vectors have the form of [[x,0,0],[xy,y,0],[xz,yz,z]],
-# the cartesian coordinates is arranged accordingly
+"""
+This module implements a core class Structure for lammps data file
+i/o and adding strain to structure.
+
+
+lna has the form: [a,b,c,alpha,beta,gamma].
+The lattice vectors have the form of [[x,0,0],[xy,y,0],[xz,yz,z]],
+and the cartesian coordinates is arranged accordingly.
+"""
+
+__author__ = "Lu Jiang and Tingzheng Hou"
+__copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"
+__version__ = "1.0"
+__maintainer__ = "Lu Jiang"
+__email__ = "lu_jiang@berkeley.edu"
+__date__ = "May 3, 2020"
 
 
 class Structure:
-    def __init__(self, filetype, filename):
+    def __init__(self, filename, filetype="LAMMPSdat"):
 
         ftype = filetype
         fname = filename
@@ -190,12 +202,12 @@ class Structure:
                 f.write("1 186.207\n\n")
 
         f.write("Atoms # atomic\n\n")
-        for i in range(self.natoms-1):
+        for i in range(self.natoms - 1):
             f.write(str(i+1)+" 1 "+"%.5f   %.5f   %.5f\n" %
                     (self.cartesianc[i][0],
                      self.cartesianc[i][1],
                      self.cartesianc[i][2]))
-        f.write(str(self.natoms)+" 1 "+"%.5f   %.5f   %.5f\n" %
+        f.write(str(self.natoms) + " 1 "+"%.5f   %.5f   %.5f\n" %
                 (self.cartesianc[-1][0],
                  self.cartesianc[-1][1],
                  self.cartesianc[-1][2]))

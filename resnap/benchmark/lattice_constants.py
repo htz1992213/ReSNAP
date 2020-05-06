@@ -6,6 +6,19 @@ import sys
 import argparse
 from monty.serialization import loadfn
 
+"""
+This module implements a core class LatticeConstant that support 
+lammps data/imput/log files i/o for calculating equilibrium lattice
+constant of Re .
+"""
+
+__author__ = "Lu Jiang and Tingzheng Hou"
+__copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"
+__version__ = "1.0"
+__maintainer__ = "Lu Jiang"
+__email__ = "lu_jiang@berkeley.edu"
+__date__ = "May 3, 2020"
+
 
 class LatticeConstant:
 
