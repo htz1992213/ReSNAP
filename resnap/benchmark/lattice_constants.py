@@ -97,7 +97,8 @@ class LatticeConstant:
         with open('submit', 'r+') as f:
             for line in f.readlines():
                 if line.find('mpirun') > -1:
-                    line = 'mpirun lmp_knl  < input.lmp_a%d_c%d > out.lmp_a%d_c%.d\n' % (i, j, i, j)
+                    line = 'mpirun lmp_knl  < input.lmp_a%d_c%d ' \
+                           '> out.lmp_a%d_c%.d\n' % (i, j, i, j)
                 data += line
         with open('submit_a%d_c%d' % (i, j), 'w') as f:
             f.writelines(data)
@@ -110,7 +111,8 @@ class LatticeConstant:
                     line = '  read_data        ' + self.metal + \
                            '.dat_a%d_c%d\n' % (i, j)
                 if line.find('dump') > -1:
-                    line = '  dump              d1 all custom 100 coordinates.dump_a%d_c%d id type x y z\n' % (i, j)
+                    line = '  dump              d1 all custom 100 ' \
+                           'coordinates.dump_a%d_c%d id type x y z\n' % (i, j)
                 data += line
         with open('input.lmp_a%d_c%d' % (i, j), 'w') as f:
             f.writelines(data)
