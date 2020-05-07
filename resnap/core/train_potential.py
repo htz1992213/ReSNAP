@@ -15,7 +15,6 @@ import sklearn.linear_model
 from sklearn.preprocessing import normalize
 from scipy import io
 import os
-import scipy as sp
 
 __author__ = "Tingzheng Hou and Lu Jiang"
 __copyright__ = "Copyright 2020, Tingzheng Hou and Lu Jiang"
@@ -24,10 +23,8 @@ __maintainer__ = "Lu Jiang"
 __email__ = "lu_jiang@berkeley.edu"
 __date__ = "May 3, 2020"
 
-MODELS = {"SVD": sp.linalg.lstsq,
-          "LASSO": sklearn.linear_model.Lasso,
-          "RIDGE": sklearn.linear_model.Ridge,
-          "ELASTIC": sklearn.linear_model.ElasticNet}
+MODELS = {"LASSO": sklearn.linear_model.Lasso,
+          "RIDGE": sklearn.linear_model.Ridge}
 
 
 class PotentialTrainer:
@@ -62,7 +59,7 @@ class PotentialTrainer:
             np.concatenate((self.training_y, self.training_x), axis=1)
 
     @staticmethod
-    def plot_y_yhat(y, y_hat):
+    def plot_y_yhat_atom(y, y_hat):
         """
         y vs y_hat plotter.
 
@@ -75,8 +72,56 @@ class PotentialTrainer:
         linear_regressor = sklearn.linear_model.LinearRegression()
         linear_regressor.fit(y.reshape(-1, 1), y_hat)
         y_pred = linear_regressor.predict(y.reshape(-1, 1))
-        plt.plot(y, y_pred, c="red", linewidth=3, alpha=0.5)
-        plt.scatter(y, y_hat, s=30, c="deepskyblue")
+        plt.plot(y, y_pred, c="red", linewidth=3, alpha=0.3)
+        plt.scatter(y, y_hat, s=20, c="deepskyblue", alpha=0.1)
+        plt.xticks(size=15)
+        plt.yticks(size=15)
+        plt.ylabel('$\hat{y}$ (eV/atom)', size=15)
+        plt.xlabel('y (eV/atom)', size=15)
+        plt.show()
+
+    @staticmethod
+    def plot_y_yhat(y, y_hat, num_array):
+        """
+        y vs y_hat plotter.
+
+        Args:
+            y (list or numpy.array): true labels.
+            y_hat (list or numpy.array): predicted labels.
+            num_array (list or numpy.array): number of atoms
+                in each sample.
+
+        """
+        y = y * num_array
+        y_hat = y_hat * num_array
+        plt.figure(figsize=(8, 8))
+        linear_regressor = sklearn.linear_model.LinearRegression()
+        linear_regressor.fit(y.reshape(-1, 1), y_hat)
+        y_pred = linear_regressor.predict(y.reshape(-1, 1))
+        plt.plot(y, y_pred, c="red", linewidth=3, alpha=0.3)
+        plt.scatter(y, y_hat, s=20, c="deepskyblue", alpha=0.1)
+        plt.xticks(size=15)
+        plt.yticks(size=15)
+        plt.ylabel('$\hat{y}$ (eV)', size=15)
+        plt.xlabel('y (eV)', size=15)
+        plt.show()
+
+    @staticmethod
+    def plot_y_yhat_heat(y, y_hat):
+        """
+        y vs y_hat plotter.
+
+        Args:
+            y (list or numpy.array): true labels.
+            y_hat (list or numpy.array): predicted labels.
+
+        """
+        plt.figure(figsize=(8, 8))
+        linear_regressor = sklearn.linear_model.LinearRegression()
+        linear_regressor.fit(y.reshape(-1, 1), y_hat)
+        plt.figure(figsize=(13, 10))
+        plt.hist2d(y, y_hat, (300, 300), cmap='jet')
+        plt.colorbar()
         plt.xticks(size=15)
         plt.yticks(size=15)
         plt.ylabel('$\hat{y}$ (eV/atom)', size=15)
@@ -84,7 +129,7 @@ class PotentialTrainer:
         plt.show()
 
     def cross_validation(self, alpha_range, max_iter=1e6, tol=1e-4,
-                         plot_image=False, seed=2020):
+                         plot_image=None, seed=2020):
         """
          Cross validation test over a range of alpha.
 
@@ -92,7 +137,7 @@ class PotentialTrainer:
              alpha_range (list or numpy.array): a list of alpha values.
              max_iter (int): The maximum number of iterations.
              tol (int): The tolerance for the optimization.
-             plot_image (bool): Whether to plot y vs y_hat plot.
+             plot_image (str): The type of image to plot.
              seed (int): numpy random seed for shuffling data.
 
          """
@@ -125,11 +170,18 @@ class PotentialTrainer:
                 error_val = np.average(diff_val / num_array_val)
                 diff_train = np.absolute(train_y - predicted_train)
                 error_train = np.average(diff_train / num_array_train)
-                if i == 0 and plot_image:
+                if i == 0 and plot_image == "atom":
+                    self.plot_y_yhat_atom(train_y / num_array_train,
+                                          predicted_train / num_array_train)
+                    self.plot_y_yhat_atom(validation_y / num_array_val,
+                                          predicted_validation / num_array_val)
+                if i == 0 and plot_image == "sample":
                     self.plot_y_yhat(train_y / num_array_train,
-                                     predicted_train / num_array_train)
+                                     predicted_train / num_array_train,
+                                     num_array_train)
                     self.plot_y_yhat(validation_y / num_array_val,
-                                     predicted_validation / num_array_val)
+                                     predicted_validation / num_array_val,
+                                     num_array_val)
                 errors_validation.append(error_val)
                 errors_train.append(error_train)
             mean_train_e = np.mean(errors_train)
