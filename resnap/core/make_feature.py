@@ -24,12 +24,17 @@ try:
     from ase.io.lammpsdata import write_lammps_data
     ase_loaded = True
 except ImportError:
+    print("""ASE not loaded. Please install ASE and LAMMPS
+    before using the make_feature module.""")
     ase_loaded = False
 
 try:
     from lammps import lammps
     lammps_loaded = True
 except ImportError:
+    print("""LAMMPS not loaded. To use the make_feature module, please
+    check https://lammps.sandia.gov/doc/Python_head.html for how to
+    install LAMMPS as a Python shared library.""")
     lammps_loaded = False
 
 __author__ = "Tingzheng Hou and Lu Jiang"
